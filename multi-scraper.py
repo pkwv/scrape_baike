@@ -22,23 +22,10 @@ MYSQL_USER = setting.MYSQL_USER
 MYSQL_PASSWD = setting.MYSQL_PASSWD
 finish = 0
 item_cnt = 0
-URL_START = 1000000
-URL_END = 2000000
+URL_START = 2000000
+URL_END = 2500000
 THREAD_NUM = 4
 
-#class MyThread(threading.Thread):
-#    """docstring for MyThread"""
-#
-#    def __init__(self, thread_id, st, ed) :
-#        super(MyThread, self).__init__()  #调用父类的构造函数
-#        self.thread_id = thread_id
-#        self.st = st
-#        self.ed = ed
-#        self.cnt = 0
-#
-#    def run(self) :
-#        print "Starting " + self.name
-#        print "Exiting " + self.name
 
 class MultiScraper(threading.Thread):
     def __init__(self, thread_id, st, ed):
@@ -62,6 +49,20 @@ class MultiScraper(threading.Thread):
         data = urllib.urlencode({})
         return urllib2.Request(url, data,  header)
 
+    def add_error(self, url):
+        self.error += 1
+        url = self.get_url(url)
+        conn = self.CONN()
+        cur = conn.cursor()
+        cur.execute("select 1 from error_page where url = %s",(url,))
+        res = cur.fetchone()
+        if not res:
+            #already in error
+            #maybe can not visit here!
+            cur.execute("insert into error_page (url) values(%s)",(url,))
+        conn.commit()
+        cur.close()
+        conn.close()
     def run(self):
         i = self.st
         while i < self.ed:
@@ -75,7 +76,10 @@ class MultiScraper(threading.Thread):
                 i += 1
                 continue
             #print url
-            self.parse(res)
+            if 'error' in res.url:
+                self.add_error(url)
+            else:
+                self.parse(res)
             i += 1
             t = random.uniform(0.05,0.35)
             time.sleep(t)
@@ -83,11 +87,7 @@ class MultiScraper(threading.Thread):
                 self.print_msg(str(i))
 
     def parse(self, res):
-        if 'error' in res.url:
-            self.error += 1
-            return
-        #tmp = res
-        #self.parse_item(res)
+        # url do not contain 'error' 
         if 'subview' in res.url:
             sel = etree.HTML(res.read().decode('UTF-8'))
             suburl = sel.xpath('//ul[@class="polysemantList-wrapper cmn-clearfix"]//li/a/@href')
@@ -99,7 +99,10 @@ class MultiScraper(threading.Thread):
                 except:
                     self.print_msg(url + 'subview')
                     continue
-                self.parse_item(r)
+                if 'error' in r.url:
+                    self.add_error(url)
+                else:
+                    self.parse_item(r)
         self.parse_item(res)
     def get_url(self, url):
         res = ''
@@ -131,14 +134,16 @@ class MultiScraper(threading.Thread):
     def parse_item(self, res):
         global item_cnt
         item_cnt += 1
-        if 'error' in res.url:
-            return 
+        # res.url don't have 'error'
         try:
             sel = etree.HTML(res.read().decode('UTF-8'))
         except:
             #print self.thread_id+' res read error ' + res.url
             req = self.make_request(res.url)
             res = urllib2.urlopen(req)
+            # there maybe can not open the url 
+            # but i didn't deal with it 
+            # cause it's little
             try: 
                 sel = etree.HTML(res.read().decode('UTF-8'))
             except:
