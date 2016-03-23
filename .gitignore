@@ -1,0 +1,9 @@
+
+
+#Python
+*.py[cod]
+
+
+
+#my config
+setting.py
