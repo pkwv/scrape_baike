@@ -8,6 +8,7 @@ import requests
 import random 
 
 def MyRequest(url, UseProxy = True):
+    cnt = 0
     while True:
         conn = ConnMysql.ConnMysql()
         cur = conn.cursor()
@@ -24,7 +25,6 @@ def MyRequest(url, UseProxy = True):
         if UseProxy:
             #i = random.randint(0, l - 1)
             #proxies = {'http':res[i][0]}
-            cnt = 0
             for i in lst:
                 cnt += 1
                 proxies = {'http':i}
