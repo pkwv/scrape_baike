@@ -30,7 +30,7 @@ class ScrapeBaike(threading.Thread):
         print str(self.thread_id) + ' ' + content
     
     def print_success_error(self):
-        print '~~~~' + str(self.thread_id) + ' ' + str(self.success) + ' ' + str(self.error)
+        print '~~~~' + str(self.thread_id) + ' success ' + str(self.success) + ' error ' + str(self.error)
     
     def make_request(self, url):
         return MyRequest.MyRequest(url)
