@@ -22,9 +22,9 @@ MYSQL_USER = setting.MYSQL_USER
 MYSQL_PASSWD = setting.MYSQL_PASSWD
 finish = 0
 item_cnt = 0
-URL_START = 2000000
-URL_END = 2500000
-THREAD_NUM = 4
+URL_START = 6500000
+URL_END = 7000000
+THREAD_NUM = 2
 
 
 class MultiScraper(threading.Thread):
@@ -39,7 +39,7 @@ class MultiScraper(threading.Thread):
         print str(self.thread_id) + ' ' + content
     
     def print_cnt(self):
-        print '~~~~' + str(self.thread_id) + ' ' + str(self.cnt)
+        print '~~~~' + str(self.thread_id) + ' ' + str(self.cnt) + ' error ' + str(self.error)
     
     def make_request(self, url):
         ind = random.randint(0,len(user_agent.USER_AGENTS)-1)
@@ -244,12 +244,9 @@ def main():
         i += 1
     for k in thread_l:
         k.start()
-    for k in thread_l:
-        k.join()   
     while threading.activeCount() > 1:
-        l = threading.enumerate()
-        for k in l:
-            print '&&&&****^^^' + k.getName()
+        for k in thread_l:
+            k.print_cnt()
         time.sleep(30)
     print 'finish ' + str(finish) 
     print 'item_cnt' + str(item_cnt)
