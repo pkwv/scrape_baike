@@ -78,21 +78,30 @@ class ScrapeProxy(threading.Thread):
         url = 'http://www.xicidaili.com/nn'
         p = '//tr[@class="" or @class="odd"]/td/text()'
         self.scrape_extract(url, p)
+        url = 'http://www.xicidaili.com/wn'
+        p = '//tr[@class="" or @class="odd"]/td/text()'
+        self.scrape_extract(url, p)
 
     def scrape_http(self):
         url = 'http://www.httpdaili.com/mfdl/'
-        p = '//li[@style="position: absolute; left: 10.5px; top: 0px;"]//div[@class="kb-item-wrap11"]//td/text()'
+        p = '//div[@class="kb-item-wrap11"]//td/text()'
         self.scrape_extract(url, p)
         
     def scrape_fldd(self):
-        url = 'http://www.fldd.cn/index.asp'
-        p = '//tr[@class="odd"]/td[@class="style1" or @class="style2"]/text()'
-        self.scrape_extract(url, p)
+        for cas in range(3):
+            url = 'http://www.fldd.cn/index.asp?page=' + str(random.randint(1,30))
+            p = '//tr[@class="odd"]/td[@class="style1" or @class="style2"]/text()'
+            self.scrape_extract(url, p)
     
     def scrape_hao(self):
-        url = 'http://www.haodailiip.com/guonei'
-        p = '//table[@class="proxy_table"]//tr/td/text()'
-        self.scrape_extract(url, p)
+        for i in range(1, 4):
+            url = 'http://www.haodailiip.com/guonei/' + str(i)
+            p = '//table[@class="proxy_table"]//tr/td/text()'
+            self.scrape_extract(url, p)
+        for i in range(1, 4):
+            url = 'http://www.haodailiip.com/guoji/' + str(i)
+            p = '//table[@class="proxy_table"]//tr/td/text()'
+            self.scrape_extract(url, p)
     
     def scrape_kuai(self):
         url = 'http://www.kuaidaili.com/free/inha/1/'
