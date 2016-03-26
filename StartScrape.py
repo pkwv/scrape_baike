@@ -7,13 +7,13 @@ import threading
 
 URL_START = 5000000
 URL_END = 6500000
-THREAD_NUM = 8
+THREAD_NUM = 16
 
 def print_time():
     print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 
 def main():
-    scr_p = ScrapeProxy('Scrape Proxy',100 ,60)
+    scr_p = ScrapeProxy('Scrape Proxy',100 ,30)
     scr_p.start()
     time.sleep(20)
 
@@ -34,7 +34,7 @@ def main():
         print_time()
         for k in thread_l:
             k.print_success_error()
-        time.sleep(200)
+        time.sleep(100)
     for k in thread_l:
         k.print_msg(str(k.cnt) + 'error: ' + str(k.error))
 
