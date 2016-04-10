@@ -15,41 +15,26 @@ import time
 import user_agent
 import setting
 import random
+import MyRequest
+import ConnMysql
 
-MYSQL_HOST = setting.MYSQL_HOST 
-MYSQL_DBNAME = setting.MYSQL_DBNAME
-MYSQL_USER = setting.MYSQL_USER
-MYSQL_PASSWD = setting.MYSQL_PASSWD
-finish = 0
-item_cnt = 0
-URL_START = 13000000
-URL_END = 14000001
-THREAD_NUM = 1
-
-
-class MultiScraper(threading.Thread):
+class ScrapeBaike(threading.Thread):
     def __init__(self, thread_id, st, ed):
-        super(MultiScraper, self).__init__()
+        super(ScrapeBaike, self).__init__()
         self.thread_id = thread_id
         self.st = st
         self.ed = ed
-        self.cnt = 0
+        self.success = 0
         self.error = 0
-        self.url = ""
+        self.f=open('log/'+str(thread_id)+'.txt','w')
     def print_msg(self, content):
         print str(self.thread_id) + ' ' + content
     
-    def print_cnt(self):
-        print '~~~~' + str(self.thread_id) + ' ' + str(self.cnt) + ' error ' + str(self.error)
+    def print_success_error(self):
+        print '~~~~' + str(self.thread_id) + ' success ' + str(self.success) + ' error ' + str(self.error)
     
     def make_request(self, url):
-        self.url = url
-        ind = random.randint(0,len(user_agent.USER_AGENTS)-1)
-        #header = {'User-Agent':"Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11"}
-        header = {'User-Agent':user_agent.USER_AGENTS[ind]}
-        #print header['User-Agent']
-        data = urllib.urlencode({})
-        return urllib2.Request(url, data,  header)
+        return MyRequest.MyRequest(url)
 
     def add_error(self, url):
         self.error += 1
@@ -70,16 +55,10 @@ class MultiScraper(threading.Thread):
         while i < self.ed:
             ''' just do it'''
             url = 'http://baike.baidu.com/view/' + str(i) + '.htm'
-            req = self.make_request(url)
-            try:
-                res = urllib2.urlopen(req)
-            except:
-                self.print_msg(url + ' run')
-                i += 1
-                continue
-            #print url
+            res = self.make_request(url)
             if 'error' in res.url:
-                self.add_error(url)
+                #self.add_error(url)
+                self.error += 1
             else:
                 self.parse(res)
             i += 1
@@ -91,18 +70,14 @@ class MultiScraper(threading.Thread):
     def parse(self, res):
         # url do not contain 'error' 
         if 'subview' in res.url:
-            sel = etree.HTML(res.read().decode('UTF-8'))
+            sel = etree.HTML(res.text)
             suburl = sel.xpath('//ul[@class="polysemantList-wrapper cmn-clearfix"]//li/a/@href')
             for url in suburl:
-                url = 'http://baike.baidu.com'+url
-                req = self.make_request(url)
-                try:
-                    r = urllib2.urlopen(req)
-                except:
-                    self.print_msg(url + 'subview')
-                    continue
+                u = 'http://baike.baidu.com'+url
+                r = self.make_request(u)
                 if 'error' in r.url:
-                    self.add_error(url)
+                    #self.add_error(url)
+                    self.error += 1
                 else:
                     self.parse_item(r)
         self.parse_item(res)
@@ -131,26 +106,14 @@ class MultiScraper(threading.Thread):
             res +=i
         return  res
     def CONN(self):
-        return MySQLdb.connect(host=MYSQL_HOST, user=MYSQL_USER, passwd=MYSQL_PASSWD, db=MYSQL_DBNAME,charset='utf8')
-    
+        return ConnMysql.ConnMysql() 
     def parse_item(self, res):
-        global item_cnt
-        item_cnt += 1
         # res.url don't have 'error'
         try:
-            sel = etree.HTML(res.read().decode('UTF-8'))
+            sel = etree.HTML(res.text)
         except:
-            #print self.thread_id+' res read error ' + res.url
-            req = self.make_request(res.url)
-            res = urllib2.urlopen(req)
-            # there maybe can not open the url 
-            # but i didn't deal with it 
-            # cause it's little
-            try: 
-                sel = etree.HTML(res.read().decode('UTF-8'))
-            except:
-                self.print_msg(res.url)
-                return 
+            self.f.write(res.url)
+            return
         url = self.get_url(res.url)
         urlmd5id = md5(url).hexdigest()
         now = datetime.utcnow().replace(microsecond=0).isoformat(' ')
@@ -224,37 +187,34 @@ class MultiScraper(threading.Thread):
         conn.commit()
         cur.close()
         conn.close()
-        #self.print_msg('finish '+url)
-        #print urlmd5id
-        #print str(ind)+'  '+str(wordid)
-        global finish
-        finish += 1
-        self.cnt += 1
+        self.success += 1
 
-def main():
-    print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-    st = URL_START
-    ed = URL_END
-    thread_num = THREAD_NUM
-    num = (ed-st)/thread_num
-    i = 0
-    j = st
-    thread_l=[]
-    while i < thread_num:
-        thread_l.append(MultiScraper('thread_'+str(i),j,j+num))
-        j += num
-        i += 1
-    for k in thread_l:
-        k.start()
-    while threading.activeCount() > 1:
-        for k in thread_l:
-            k.print_cnt()
-            print k.url + "   maybe dying"
-        time.sleep(30)
-    print 'finish ' + str(finish) 
-    print 'item_cnt' + str(item_cnt)
-    print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-    for k in thread_l:
-        k.print_msg(str(k.cnt) + ' error ' + str(k.error))
-if __name__ == '__main__':
-    main()
+#def main():
+#    print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+#    st = URL_START
+#    ed = URL_END
+#    thread_num = THREAD_NUM
+#    num = (ed-st)/thread_num
+#    i = 0
+#    j = st
+#    thread_l=[]
+#    while i < thread_num:
+#        thread_l.append(MultiScraper('thread_'+str(i),j,j+num))
+#        j += num
+#        i += 1
+#    for k in thread_l:
+#        k.start()
+#    for k in thread_l:
+#        k.join()   
+#    while threading.activeCount() > 1:
+#        l = threading.enumerate()
+#        for k in l:
+#            print '&&&&****^^^' + k.getName()
+#        time.sleep(30)
+#    print 'finish ' + str(finish) 
+#    print 'item_cnt' + str(item_cnt)
+#    print time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+#    for k in thread_l:
+#        k.print_msg(str(k.cnt) + ' error ' + str(k.error))
+#if __name__ == '__main__':
+#    main()
