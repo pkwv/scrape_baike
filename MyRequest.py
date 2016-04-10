@@ -51,4 +51,5 @@ def MyRequest(url, UseProxy = True):
                 req = requests.get(url, headers=headers)
             except requests.exceptions.RequestException as e:
                 print e
+                continue
             return req
