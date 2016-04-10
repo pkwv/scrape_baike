@@ -26,6 +26,7 @@ class ScrapeBaike(threading.Thread):
         self.ed = ed
         self.success = 0
         self.error = 0
+        self.f=open('log/'+str(thread_id)+'.txt','w')
     def print_msg(self, content):
         print str(self.thread_id) + ' ' + content
     
@@ -108,7 +109,11 @@ class ScrapeBaike(threading.Thread):
         return ConnMysql.ConnMysql() 
     def parse_item(self, res):
         # res.url don't have 'error'
-        sel = etree.HTML(res.text)
+        try:
+            sel = etree.HTML(res.text)
+        except:
+            self.f.write(res.url)
+            return
         url = self.get_url(res.url)
         urlmd5id = md5(url).hexdigest()
         now = datetime.utcnow().replace(microsecond=0).isoformat(' ')
