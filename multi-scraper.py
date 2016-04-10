@@ -22,9 +22,9 @@ MYSQL_USER = setting.MYSQL_USER
 MYSQL_PASSWD = setting.MYSQL_PASSWD
 finish = 0
 item_cnt = 0
-URL_START = 6500000
-URL_END = 7000000
-THREAD_NUM = 2
+URL_START = 13000000
+URL_END = 14000001
+THREAD_NUM = 1
 
 
 class MultiScraper(threading.Thread):
@@ -35,6 +35,7 @@ class MultiScraper(threading.Thread):
         self.ed = ed
         self.cnt = 0
         self.error = 0
+        self.url = ""
     def print_msg(self, content):
         print str(self.thread_id) + ' ' + content
     
@@ -42,6 +43,7 @@ class MultiScraper(threading.Thread):
         print '~~~~' + str(self.thread_id) + ' ' + str(self.cnt) + ' error ' + str(self.error)
     
     def make_request(self, url):
+        self.url = url
         ind = random.randint(0,len(user_agent.USER_AGENTS)-1)
         #header = {'User-Agent':"Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11"}
         header = {'User-Agent':user_agent.USER_AGENTS[ind]}
@@ -247,6 +249,7 @@ def main():
     while threading.activeCount() > 1:
         for k in thread_l:
             k.print_cnt()
+            print k.url + "   maybe dying"
         time.sleep(30)
     print 'finish ' + str(finish) 
     print 'item_cnt' + str(item_cnt)
