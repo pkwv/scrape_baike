@@ -7,6 +7,11 @@ import user_agent
 import requests
 import random 
 
+err_code = 'ISO-8859-1'
+def ToUnicode(text):
+    return text.encode(err_code).decode(requests.utils.get_encodings_from_content(text)[0])
+    
+
 def MyRequest(url, UseProxy = True):
     cnt = 0
     while True:
@@ -41,7 +46,9 @@ def MyRequest(url, UseProxy = True):
                     cur.close()
                     conn.close()
                     continue
-                print url + ' cnt  ' + str(cnt)
+                #print url + ' cnt  ' + str(cnt)
+                #if req.encoding == err_code:
+                #    req.text = ToUnicode(req.text)
                 return req
         else:
            
@@ -52,4 +59,6 @@ def MyRequest(url, UseProxy = True):
             except requests.exceptions.RequestException as e:
                 print e
                 continue
+            #if req.encoding == err_code:
+            #    req.text = ToUnicode(req.text)
             return req
