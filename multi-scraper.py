@@ -15,6 +15,7 @@ import time
 import user_agent
 import setting
 import random
+import codecs
 
 MYSQL_HOST = setting.MYSQL_HOST 
 MYSQL_DBNAME = setting.MYSQL_DBNAME
@@ -22,10 +23,10 @@ MYSQL_USER = setting.MYSQL_USER
 MYSQL_PASSWD = setting.MYSQL_PASSWD
 finish = 0
 item_cnt = 0
-URL_START = 13000000
-URL_END = 14000001
+URL_START = 500000
+URL_END = 1000001
 THREAD_NUM = 1
-
+f = codecs.open('tmp.txt','w','utf-8')
 
 class MultiScraper(threading.Thread):
     def __init__(self, thread_id, st, ed):
@@ -168,6 +169,9 @@ class MultiScraper(threading.Thread):
         #print item['url']
         word=self.link_list(sel.xpath('//dd[@class="lemmaWgt-lemmaTitle-title"]/h1/text()'))  #utf8
         explanation=self.link_list(sel.xpath('string(//div[@class="lemma-summary"])'))   #utf8
+        f.write(word)
+        if word == '' or explanation == '':
+            return
         l1=sel.xpath('//div[@class="basic-info cmn-clearfix"]//dl//dt//text()')
         l2=sel.xpath('//div[@class="basic-info cmn-clearfix"]//dl//dd//text()')
         dict={}
