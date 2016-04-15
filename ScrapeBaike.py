@@ -17,6 +17,9 @@ import setting
 import random
 import MyRequest
 import ConnMysql
+import requests
+
+err_code = 'iso-8859-1'
 
 class ScrapeBaike(threading.Thread):
     def __init__(self, thread_id, st, ed):
@@ -27,6 +30,7 @@ class ScrapeBaike(threading.Thread):
         self.success = 0
         self.error = 0
         self.f=open('log/'+str(thread_id)+'.txt','w')
+        self.text= ''
     def print_msg(self, content):
         print str(self.thread_id) + ' ' + content
     
@@ -34,8 +38,13 @@ class ScrapeBaike(threading.Thread):
         print '~~~~' + str(self.thread_id) + ' success ' + str(self.success) + ' error ' + str(self.error)
     
     def make_request(self, url):
-        return MyRequest.MyRequest(url)
-
+        return  MyRequest.MyRequest(url)
+ 
+    def get_unicode_text(self, res):
+        if res.encoding.lower() == err_code:
+            return res.text.encode(err_code).decode(requests.utils.get_encodings_from_content(res.text)[0])
+        else:
+            return res.text
     def add_error(self, url):
         self.error += 1
         url = self.get_url(url)
@@ -58,25 +67,28 @@ class ScrapeBaike(threading.Thread):
             res = self.make_request(url)
             if 'error' in res.url:
                 #self.add_error(url)
+                self.f.write(url + ' error in url\n')
+                #print 'error in url'
                 self.error += 1
             else:
                 self.parse(res)
             i += 1
-            t = random.uniform(0.05,0.35)
-            time.sleep(t)
+            #t = random.uniform(0.05,0.35)
+            #time.sleep(t)
             if i%1000 == 0:
                 self.print_msg(str(i))
 
     def parse(self, res):
         # url do not contain 'error' 
         if 'subview' in res.url:
-            sel = etree.HTML(res.text)
+            sel = etree.HTML(self.get_unicode_text(res))
             suburl = sel.xpath('//ul[@class="polysemantList-wrapper cmn-clearfix"]//li/a/@href')
             for url in suburl:
                 u = 'http://baike.baidu.com'+url
                 r = self.make_request(u)
                 if 'error' in r.url:
                     #self.add_error(url)
+                    self.f.write(url + ' error in suburl\n')
                     self.error += 1
                 else:
                     self.parse_item(r)
@@ -109,10 +121,13 @@ class ScrapeBaike(threading.Thread):
         return ConnMysql.ConnMysql() 
     def parse_item(self, res):
         # res.url don't have 'error'
+        #print self.get_unicode_text(res).encode('utf-8')
         try:
-            sel = etree.HTML(res.text)
+            sel = etree.HTML(self.get_unicode_text(res))
         except:
-            self.f.write(res.url)
+            self.f.write(res.url + ' error in etree.HTML\n')
+            self.error += 1
+            #self.print_msg('here')
             return
         url = self.get_url(res.url)
         urlmd5id = md5(url).hexdigest()
@@ -130,7 +145,12 @@ class ScrapeBaike(threading.Thread):
        
         #print item['url']
         word=self.link_list(sel.xpath('//dd[@class="lemmaWgt-lemmaTitle-title"]/h1/text()'))  #utf8
+        #self.print_msg(res.url + '  ' + word)
         explanation=self.link_list(sel.xpath('string(//div[@class="lemma-summary"])'))   #utf8
+        if word == '':
+            self.f.write(res.url + ' no word' + '\n')
+            self.error += 1
+            return 
         l1=sel.xpath('//div[@class="basic-info cmn-clearfix"]//dl//dt//text()')
         l2=sel.xpath('//div[@class="basic-info cmn-clearfix"]//dl//dd//text()')
         dict={}
