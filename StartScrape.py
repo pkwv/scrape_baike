@@ -5,8 +5,8 @@ from ScrapeProxy import ScrapeProxy
 import time
 import threading
 
-URL_START = 1000000
-URL_END = 2000001
+URL_START = 0
+URL_END = 500000
 THREAD_NUM = 50
 
 def print_time():
@@ -38,7 +38,7 @@ def main():
     for k in thread_l:
         k.join();
     for k in thread_l:
-        k.print_msg(str(k.success) + '  error: ' + str(k.error))
+        k.print_success_error() #msg(str(k.success) + '  error: ' + str(k.error))
 
 
 if __name__ == '__main__':
