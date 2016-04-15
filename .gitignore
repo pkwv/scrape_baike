@@ -8,3 +8,5 @@
 #my config
 setting.py
 log
+*.txt
+*.out
