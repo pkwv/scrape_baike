@@ -23,8 +23,8 @@ MYSQL_USER = setting.MYSQL_USER
 MYSQL_PASSWD = setting.MYSQL_PASSWD
 finish = 0
 item_cnt = 0
-URL_START = 500000
-URL_END = 1000001
+URL_START = 100
+URL_END = 200
 THREAD_NUM = 1
 f = codecs.open('tmp.txt','w','utf-8')
 
