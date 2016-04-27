@@ -48,7 +48,7 @@ class ScrapeProxy(threading.Thread):
         return proxy
 
     def scrape_89ip(self):
-        payload = {'tqsl':'30'}
+        payload = {'tqsl':'100'}
         url = 'http://www.89ip.cn/tiqu.php'
         res = requests.get(url, params = payload)
         t = etree.HTML(res.text)
@@ -75,12 +75,13 @@ class ScrapeProxy(threading.Thread):
         self.insert_mysql(proxy)
         
     def scrape_xici(self):
-        url = 'http://www.xicidaili.com/nn'
-        p = '//tr[@class="" or @class="odd"]/td/text()'
-        self.scrape_extract(url, p)
-        url = 'http://www.xicidaili.com/wn'
-        p = '//tr[@class="" or @class="odd"]/td/text()'
-        self.scrape_extract(url, p)
+        for i in range(1,5):
+            url = 'http://www.xicidaili.com/nn/'+str(i)
+            p = '//tr[@class="" or @class="odd"]/td/text()'
+            self.scrape_extract(url, p)
+            url = 'http://www.xicidaili.com/wn'
+            p = '//tr[@class="" or @class="odd"]/td/text()'
+            self.scrape_extract(url, p)
 
     def scrape_http(self):
         url = 'http://www.httpdaili.com/mfdl/'
@@ -94,19 +95,19 @@ class ScrapeProxy(threading.Thread):
             self.scrape_extract(url, p)
     
     def scrape_hao(self):
-        for i in range(1, 4):
+        for i in range(1, 6):
             url = 'http://www.haodailiip.com/guonei/' + str(i)
             p = '//table[@class="proxy_table"]//tr/td/text()'
             self.scrape_extract(url, p)
-        for i in range(1, 4):
             url = 'http://www.haodailiip.com/guoji/' + str(i)
             p = '//table[@class="proxy_table"]//tr/td/text()'
             self.scrape_extract(url, p)
     
     def scrape_kuai(self):
-        url = 'http://www.kuaidaili.com/free/inha/1/'
-        p = '//table[@class="table table-bordered table-striped"]//tr/td/text()'
-        self.scrape_extract(url, p)
+        for i in range(1,3):
+            url = 'http://www.kuaidaili.com/free/inha/' + str(i)
+            p = '//table[@class="table table-bordered table-striped"]//tr/td/text()'
+            self.scrape_extract(url, p)
         
     def run(self):
         while True:
