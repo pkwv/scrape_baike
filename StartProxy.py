@@ -6,7 +6,7 @@ import time
 
 
 def main():
-    scrapeproxy = ScrapeProxy('scrape proxy', 180, 100)
+    scrapeproxy = ScrapeProxy('scrape proxy', 300, 100)
     scrapeproxy.start()
     print 'lalal'
 
